@@ -140,6 +140,8 @@ const targetElement = document.getElementById("chat").parentNode.parentNode.pare
 targetElement.classList.add("pretty_scrollbar");
 targetElement.classList.add("chat-parent");
 window.isScrolled = false;
+window.pendingGenerationStart = false;
+window.smoothScrollUntilTs = 0;
 let scrollTimeout;
 let lastScrollTop = 0;
 let lastScrollHeight = 0;
@@ -175,6 +177,7 @@ const observer = new MutationObserver(function() {
   if (targetElement.classList.contains("_generating")) {
     document.getElementById("stop").style.display = "flex";
     document.getElementById("Generate").style.display = "none";
+    window.pendingGenerationStart = true;
     // If the user is near the bottom, ensure auto-scroll is enabled
     // for the new reply. This catches cases where isScrolled was
     // incorrectly set to true by layout shifts during page load, etc.

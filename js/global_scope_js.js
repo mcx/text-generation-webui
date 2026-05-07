@@ -273,6 +273,7 @@ function removeLastClick() {
 }
 
 let _scrollPending = false;
+const SMOOTH_SCROLL_WINDOW_MS = 700;
 
 function autoScrollToBottom() {
   if (_scrollPending) return;
@@ -284,7 +285,11 @@ function autoScrollToBottom() {
       if (chatParent) {
         const maxScroll = chatParent.scrollHeight - chatParent.clientHeight;
         if (maxScroll > 0 && chatParent.scrollTop < maxScroll - 1) {
-          chatParent.scrollTop = maxScroll;
+          if (Date.now() < window.smoothScrollUntilTs) {
+            chatParent.scrollTo({ top: maxScroll, behavior: "smooth" });
+          } else {
+            chatParent.scrollTop = maxScroll;
+          }
         }
       }
     }
@@ -334,6 +339,9 @@ function applyMorphdomUpdate(data) {
   }
 
   const queryScope = target_element;
+
+  const messagesContainer = document.getElementsByClassName("messages")[0];
+  const messagesCountBefore = messagesContainer ? messagesContainer.children.length : 0;
 
   // Track open blocks and store their scroll positions
   const openBlocks = new Set();
@@ -406,6 +414,15 @@ function applyMorphdomUpdate(data) {
   // Syntax highlighting and LaTeX
   if (window.doSyntaxHighlighting) {
     window.doSyntaxHighlighting();
+  }
+
+  // Only animate the padding jump on a fresh submission, not on chat switches or streaming chunks.
+  if (window.pendingGenerationStart) {
+    const messagesCountAfter = messagesContainer ? messagesContainer.children.length : 0;
+    if (messagesCountAfter > messagesCountBefore) {
+      window.smoothScrollUntilTs = Date.now() + SMOOTH_SCROLL_WINDOW_MS;
+    }
+    window.pendingGenerationStart = false;
   }
 
   // Auto-scroll runs both before and after padding update.
