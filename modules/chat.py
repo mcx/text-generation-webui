@@ -1304,6 +1304,13 @@ def character_is_loaded(state, raise_exception=False):
         return True
 
 
+def check_model_loaded_or_raise():
+    model_is_loaded, error_message = utils.check_model_loaded()
+    if not model_is_loaded:
+        import gradio as gr
+        raise gr.Error(error_message)
+
+
 def generate_chat_reply_wrapper(text, state, regenerate=False, _continue=False):
     '''
     Same as above but returns HTML for the UI.
@@ -1316,10 +1323,7 @@ def generate_chat_reply_wrapper(text, state, regenerate=False, _continue=False):
     if not character_is_loaded(state):
         return
 
-    model_is_loaded, error_message = utils.check_model_loaded()
-    if not model_is_loaded:
-        import gradio as gr
-        raise gr.Error(error_message)
+    check_model_loaded_or_raise()
 
     if state['start_with'] != '' and not _continue:
         if regenerate:
