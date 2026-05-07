@@ -498,6 +498,10 @@ audio {
     padding-top: 20px;
 }
 
+.chat > .messages > .message:last-child {
+    padding-bottom: 2rem;
+}
+
 .message-body {
     font-size: 16px;
 }
