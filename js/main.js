@@ -140,6 +140,8 @@ const targetElement = document.getElementById("chat").parentNode.parentNode.pare
 targetElement.classList.add("pretty_scrollbar");
 targetElement.classList.add("chat-parent");
 window.isScrolled = false;
+window.pendingGenerationStart = false;
+window.smoothScrollUntilTs = 0;
 let scrollTimeout;
 let lastScrollTop = 0;
 let lastScrollHeight = 0;
@@ -175,6 +177,7 @@ const observer = new MutationObserver(function() {
   if (targetElement.classList.contains("_generating")) {
     document.getElementById("stop").style.display = "flex";
     document.getElementById("Generate").style.display = "none";
+    window.pendingGenerationStart = true;
     // If the user is near the bottom, ensure auto-scroll is enabled
     // for the new reply. This catches cases where isScrolled was
     // incorrectly set to true by layout shifts during page load, etc.
@@ -962,24 +965,18 @@ document.fonts.addEventListener("loadingdone", (event) => {
 (function() {
   const chatParent = document.querySelector(".chat-parent");
   const chatInputRow = document.querySelector("#chat-input-row");
-  const originalMarginBottom = 75;
-  let originalHeight = chatInputRow.offsetHeight;
+  if (!chatParent || !chatInputRow) return;
 
-  function updateMargin() {
-    const currentHeight = chatInputRow.offsetHeight;
-    const heightDifference = currentHeight - originalHeight;
-    chatParent.style.marginBottom = `${originalMarginBottom + heightDifference}px`;
+  // Keep chat-parent's box ending 15px above the (absolute)
+  // composer so the message-actions row isn't glued to it.
+  function syncMargin() {
+    chatParent.style.marginBottom = (chatInputRow.offsetHeight + 15) + "px";
     if (!window.isScrolled) {
       chatParent.scrollTop = chatParent.scrollHeight - chatParent.clientHeight;
     }
   }
 
-  // Watch for size changes that affect height
-  new ResizeObserver(updateMargin).observe(chatInputRow);
-
-  // Also listen for window resize
-  window.addEventListener("resize", updateMargin);
-
-  // Initial call to set the margin based on current state
-  updateMargin();
+  new ResizeObserver(syncMargin).observe(chatInputRow);
+  window.addEventListener("resize", syncMargin);
+  syncMargin();
 })();
