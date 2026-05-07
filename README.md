@@ -281,7 +281,7 @@ usage: server.py [-h] [--user-data-dir USER_DATA_DIR] [--multi-user] [--model MO
                  [--frequency-penalty N] [--presence-penalty N] [--encoder-repetition-penalty N] [--no-repeat-ngram-size N] [--repetition-penalty-range N] [--penalty-alpha N] [--guidance-scale N]
                  [--mirostat-mode N] [--mirostat-tau N] [--mirostat-eta N] [--do-sample | --no-do-sample] [--dynamic-temperature | --no-dynamic-temperature]
                  [--temperature-last | --no-temperature-last] [--sampler-priority N] [--dry-sequence-breakers N] [--enable-thinking | --no-enable-thinking] [--reasoning-effort N]
-                 [--preserve-thinking | --no-preserve-thinking] [--chat-template-file CHAT_TEMPLATE_FILE]
+                 [--preserve-thinking | --no-preserve-thinking] [--chat-template-file CHAT_TEMPLATE_FILE] [--no-electron]
 
 TextGen
 
@@ -447,6 +447,9 @@ API generation defaults:
   --preserve-thinking, --no-preserve-thinking          Preserve thinking blocks from prior turns in the chat template
   --chat-template-file CHAT_TEMPLATE_FILE              Path to a chat template file (.jinja, .jinja2, or .yaml) to use as the default instruction template for API requests. Overrides the model's
                                                        built-in template.
+
+Electron:
+  --no-electron                                        In portable builds, skip the Electron desktop window. Useful if you prefer to use the web UI in the browser.
 ```
 
 </details>
