@@ -83,7 +83,7 @@ textgen
             └── tokenizer.json
 ```
 
-These formats require the one-click installer (not the portable build).
+These formats require the full installation (not the portable build).
 </details>
 
 ## Installation
