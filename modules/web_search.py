@@ -91,7 +91,7 @@ def perform_web_search(query, num_pages=3, max_workers=5, fetch_content=True):
     """Perform web search and return results, optionally with page content"""
     try:
         kwargs = {'max_results': num_pages} if num_pages is not None else {}
-        results = DDGS().text(query, backend="duckduckgo", **kwargs)
+        results = DDGS().text(query, **kwargs)
 
         search_results = [
             {'title': r['title'], 'url': r['href'], 'snippet': r.get('body', ''), 'content': ''}
