@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen } = require("electron");
+const { app, BrowserWindow, Menu, screen } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -114,6 +114,14 @@ function createWindow(port) {
     webPreferences: { nodeIntegration: false, contextIsolation: true, spellcheck: false },
   });
   if (state && state.maximized) mainWindow.maximize();
+  mainWindow.webContents.on("context-menu", (_, params) => {
+    const tmpl = [];
+    if (params.editFlags.canCut) tmpl.push({ role: "cut" });
+    if (params.editFlags.canCopy) tmpl.push({ role: "copy" });
+    if (params.editFlags.canPaste) tmpl.push({ role: "paste" });
+    if (params.editFlags.canSelectAll) tmpl.push({ type: "separator" }, { role: "selectAll" });
+    if (tmpl.length) Menu.buildFromTemplate(tmpl).popup({ window: mainWindow });
+  });
   mainWindow.on("page-title-updated", (e) => e.preventDefault());
   mainWindow.webContents.on("will-prevent-unload", (e) => e.preventDefault());
   mainWindow.on("close", saveState);
