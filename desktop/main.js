@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, screen } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, screen } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -111,7 +111,12 @@ function createWindow(port) {
     ...bounds,
     title: TITLE,
     autoHideMenuBar: true,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, spellcheck: false },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      spellcheck: false,
+    },
   });
   if (state && state.maximized) mainWindow.maximize();
   mainWindow.webContents.on("context-menu", (_, params) => {
@@ -147,6 +152,11 @@ async function waitForPortAndOpen(port) {
   }, 500);
 }
 
+ipcMain.handle("pick-directory", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, { properties: ["openDirectory"] });
+  return result.canceled ? null : result.filePaths[0];
+});
+
 app.whenReady().then(() => {
   serverProcess = spawn(python, ["server.py", "--portable", "--api", ...userArgs], {
     cwd: baseDir,
@@ -159,6 +169,7 @@ app.whenReady().then(() => {
       PYTHONUNBUFFERED: "1",
       FORCE_COLOR: "1",
       TERM: "xterm-256color",
+      TEXTGEN_ELECTRON: "1",
     },
   });
   if (!isWin) serverProcess.unref();

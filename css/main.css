@@ -145,6 +145,10 @@ div.svelte-iyf88w {
     padding: 0 !important;
 }
 
+.slim-textbox {
+    padding: 0 !important;
+}
+
 #download-label, #upload-label {
     min-height: 0
 }

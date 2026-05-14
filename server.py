@@ -261,6 +261,10 @@ if __name__ == "__main__":
     if has_mcp_config():
         logger.warning(f"MCP stdio servers will be loaded from \"{shared.user_data_dir / 'mcp.json'}\"")
 
+    if shared.is_electron:
+        shared.settings['model_dir'] = shared.args.model_dir
+        shared.default_settings['model_dir'] = shared.args.model_dir
+
     if settings_file is not None:
         logger.info(f"Loading settings from \"{settings_file}\"")
         with open(settings_file, 'r', encoding='utf-8') as f:
@@ -268,6 +272,10 @@ if __name__ == "__main__":
 
         if new_settings:
             shared.settings.update(new_settings)
+
+    if shared.is_electron:
+        shared.args.model_dir = shared.settings['model_dir']
+        shared.user_config = shared.load_user_config()
 
     # Apply CLI overrides for image model settings (CLI flags take precedence over saved settings)
     shared.apply_image_model_cli_overrides()

@@ -248,6 +248,9 @@ def list_interface_input_elements():
         'include_past_attachments',
     ]
 
+    if shared.is_electron:
+        elements += ['model_dir']
+
     if not shared.args.portable:
         # Image generation elements
         elements += [
@@ -514,6 +517,9 @@ def setup_auto_save():
         'include_past_attachments',
 
     ]
+
+    if shared.is_electron:
+        change_elements += ['model_dir']
 
     if not shared.args.portable:
         # Image generation tab (ui_image_generation.py)
