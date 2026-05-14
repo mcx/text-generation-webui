@@ -50,6 +50,10 @@ _history_file_lock = threading.Lock()
 _tool_approvals = {}
 _tool_approvals_lock = threading.Lock()
 
+# Currently-viewed chat id (single-user mode only). Used to skip streaming UI
+# updates when the user switches to a different chat mid-stream.
+viewing_unique_id = None
+
 
 def request_tool_approval(session_key, tool_name):
     """Block until the user approves/rejects a tool call.
@@ -1320,6 +1324,10 @@ def generate_chat_reply_wrapper(text, state, regenerate=False, _continue=False):
     using metadata['assistant_N']['tool_sequence'].
     '''
 
+    global viewing_unique_id
+    if not shared.args.multi_user:
+        viewing_unique_id = state['unique_id']
+
     if not character_is_loaded(state):
         return
 
@@ -1401,7 +1409,8 @@ def generate_chat_reply_wrapper(text, state, regenerate=False, _continue=False):
             if visible_prefix:
                 history['visible'][-1][1] = '\n\n'.join(visible_prefix + [_original_visible])
 
-            yield chat_html_wrapper(history, state['name1'], state['name2'], state['mode'], state['chat_style'], state['character_menu'], last_message_only=(i > 0)), history
+            if shared.args.multi_user or viewing_unique_id is None or viewing_unique_id == state['unique_id']:
+                yield chat_html_wrapper(history, state['name1'], state['name2'], state['mode'], state['chat_style'], state['character_menu'], last_message_only=(i > 0)), history
 
             if visible_prefix:
                 history['visible'][-1][1] = _original_visible
@@ -2427,6 +2436,10 @@ def handle_remove_last_click(state):
 
 
 def handle_unique_id_select(state):
+    global viewing_unique_id
+    if not shared.args.multi_user:
+        viewing_unique_id = state['unique_id']
+
     history = load_history(state['unique_id'], state['character_menu'], state['mode'])
     html = redraw_html(history, state['name1'], state['name2'], state['mode'], state['chat_style'], state['character_menu'])
 
