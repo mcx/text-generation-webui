@@ -68,7 +68,7 @@ def create_ui():
                             # Multimodal
                             with gr.Accordion("Multimodal (vision)", open=False) as shared.gradio['mmproj_accordion']:
                                 with gr.Row():
-                                    shared.gradio['mmproj'] = gr.Dropdown(label="mmproj file", choices=utils.get_available_mmproj(), value=lambda: shared.args.mmproj or 'None', elem_classes='slim-dropdown', info=f'Select a file that matches your model. Must be placed in {shared.user_data_dir}/mmproj/', interactive=not mu)
+                                    shared.gradio['mmproj'] = gr.Dropdown(label="mmproj file", choices=utils.get_available_mmproj(), value=lambda: shared.args.mmproj or 'None', elem_classes='slim-dropdown', info=f'Select a file that matches your model. Lists files placed in {shared.user_data_dir}/mmproj/, plus any mmproj-*.gguf files found in your main models folder.', interactive=not mu)
                                     ui.create_refresh_button(shared.gradio['mmproj'], lambda: None, lambda: {'choices': utils.get_available_mmproj()}, 'refresh-button', interactive=not mu)
 
                             # Speculative decoding
