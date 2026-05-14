@@ -433,6 +433,9 @@ class LlamaServer:
             "--flash-attn", "on",
         ]
 
+        if shared.args.ctx_size < 0:
+            shared.args.ctx_size = 0
+
         if shared.args.ctx_size > 0:
             cmd += ["--ctx-size", str(shared.args.ctx_size)]
         elif shared.args.gpu_layers >= 0:
