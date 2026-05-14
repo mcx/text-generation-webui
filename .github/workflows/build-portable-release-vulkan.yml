@@ -181,7 +181,7 @@ jobs:
                 chmod +x textgen
             fi
 
-            mv desktop/main.js desktop/package.json .
+            mv desktop/main.js desktop/preload.js desktop/package.json .
             rm -rf desktop
 
             # 5c. Restructure: textgen-VERSION/{textgen, user_data/, app/<everything else>}
