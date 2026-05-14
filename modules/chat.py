@@ -1631,6 +1631,9 @@ def generate_chat_reply_wrapper(text, state, regenerate=False, _continue=False):
 
     save_history(history, state['unique_id'], state['character_menu'], state['mode'])
 
+    if not shared.args.multi_user and viewing_unique_id == state['unique_id']:
+        viewing_unique_id = None
+
 
 def remove_last_message(history):
     if 'metadata' not in history:
@@ -2453,6 +2456,7 @@ def handle_unique_id_select(state):
 
 def handle_start_new_chat_click(state):
     import gradio as gr
+    global viewing_unique_id
     history = start_new_chat(state)
     histories = find_all_histories_with_first_prompts(state)
     html = redraw_html(history, state['name1'], state['name2'], state['mode'], state['chat_style'], state['character_menu'])
@@ -2461,6 +2465,8 @@ def handle_start_new_chat_click(state):
 
     if len(histories) > 0:
         past_chats_update = gr.update(choices=histories, value=histories[0][1])
+        if not shared.args.multi_user:
+            viewing_unique_id = histories[0][1]
     else:
         past_chats_update = gr.update(choices=histories)
 
@@ -2469,6 +2475,7 @@ def handle_start_new_chat_click(state):
 
 def handle_start_incognito_chat_click(state):
     import gradio as gr
+    global viewing_unique_id
     unique_id = 'incognito-' + datetime.now().strftime('%Y%m%d-%H-%M-%S')
     history = start_new_chat(state, unique_id=unique_id)
     html = redraw_html(history, state['name1'], state['name2'], state['mode'], state['chat_style'], state['character_menu'])
@@ -2477,11 +2484,14 @@ def handle_start_incognito_chat_click(state):
 
     histories = find_all_histories_with_first_prompts(state)
     past_chats_update = gr.update(choices=histories, value=unique_id)
+    if not shared.args.multi_user:
+        viewing_unique_id = unique_id
 
     return [history, html, past_chats_update]
 
 
 def handle_delete_chat_confirm_click(state):
+    global viewing_unique_id
     filtered_histories = find_all_histories_with_first_prompts(state)
     filtered_ids = [h[1] for h in filtered_histories]
 
@@ -2497,11 +2507,15 @@ def handle_delete_chat_confirm_click(state):
 
     convert_to_markdown.cache_clear()
 
+    if not shared.args.multi_user:
+        viewing_unique_id = unique_id
+
     return [history, html, unique_id]
 
 
 def handle_branch_chat_click(state):
     import gradio as gr
+    global viewing_unique_id
     branch_from_index = state['branch_index']
     if branch_from_index == -1:
         history = state['history']
@@ -2523,6 +2537,8 @@ def handle_branch_chat_click(state):
     convert_to_markdown.cache_clear()
 
     past_chats_update = gr.update(choices=histories, value=new_unique_id)
+    if not shared.args.multi_user:
+        viewing_unique_id = new_unique_id
 
     return [history, html, past_chats_update, -1]
 
@@ -2660,6 +2676,7 @@ def handle_search_chat_change(state):
 
 def handle_upload_chat_history(load_chat_history, state):
     import gradio as gr
+    global viewing_unique_id
     history = start_new_chat(state)
     history = load_history_json(load_chat_history, history)
     save_history(history, state['unique_id'], state['character_menu'], state['mode'])
@@ -2671,6 +2688,8 @@ def handle_upload_chat_history(load_chat_history, state):
 
     if len(histories) > 0:
         past_chats_update = gr.update(choices=histories, value=histories[0][1])
+        if not shared.args.multi_user:
+            viewing_unique_id = histories[0][1]
     else:
         past_chats_update = gr.update(choices=histories)
 
@@ -2683,6 +2702,7 @@ def handle_upload_chat_history(load_chat_history, state):
 
 def handle_character_menu_change(state):
     import gradio as gr
+    global viewing_unique_id
     name1, name2, picture, greeting, context = load_character(state['character_menu'], state['name1'], state['name2'])
 
     state['name1'] = name1
@@ -2698,7 +2718,10 @@ def handle_character_menu_change(state):
     convert_to_markdown.cache_clear()
 
     if len(histories) > 0:
-        past_chats_update = gr.update(choices=histories, value=loaded_unique_id or histories[0][1])
+        new_id = loaded_unique_id or histories[0][1]
+        past_chats_update = gr.update(choices=histories, value=new_id)
+        if not shared.args.multi_user:
+            viewing_unique_id = new_id
     else:
         past_chats_update = gr.update(choices=histories)
 
@@ -2734,6 +2757,7 @@ def handle_character_picture_change(picture_path):
 
 def handle_mode_change(state):
     import gradio as gr
+    global viewing_unique_id
     history, loaded_unique_id = load_latest_history(state)
     histories = find_all_histories_with_first_prompts(state)
 
@@ -2746,7 +2770,10 @@ def handle_mode_change(state):
     convert_to_markdown.cache_clear()
 
     if len(histories) > 0:
-        past_chats_update = gr.update(choices=histories, value=loaded_unique_id or histories[0][1])
+        new_id = loaded_unique_id or histories[0][1]
+        past_chats_update = gr.update(choices=histories, value=new_id)
+        if not shared.args.multi_user:
+            viewing_unique_id = new_id
     else:
         past_chats_update = gr.update(choices=histories)
 
