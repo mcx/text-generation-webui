@@ -441,17 +441,19 @@ def handle_load_model_event_initial(model, state):
     update_model_parameters(state)  # This updates the command-line flags
 
     show_separator, _, _, _ = utils.get_jinja_control_visibility(state.get('instruction_template_str', ''))
+    not_chat = state.get('mode') != 'chat'
 
     vram_info = state.get('vram_info', "<div id=\"vram-info\"'>Estimated VRAM to load the model:</div>")
-    return output + [state] + [vram_info] + [gr.update(visible=show_separator)]
+    return output + [state] + [vram_info] + [gr.update(visible=show_separator and not_chat)]
 
 
 def handle_load_model_event_final(truncation_length, loader, state):
     truncation_length = update_truncation_length(truncation_length, state)
 
     show_separator, show_reasoning, show_thinking, show_preserve_thinking = utils.get_jinja_control_visibility(state.get('instruction_template_str', ''))
+    not_chat = state.get('mode') != 'chat'
 
-    return [truncation_length, loader, gr.update(visible=show_separator), gr.update(visible=show_reasoning), gr.update(visible=show_thinking), gr.update(visible=show_preserve_thinking)]
+    return [truncation_length, loader, gr.update(visible=show_separator and not_chat), gr.update(visible=show_reasoning and not_chat), gr.update(visible=show_thinking and not_chat), gr.update(visible=show_preserve_thinking and not_chat)]
 
 
 def handle_unload_model_click():

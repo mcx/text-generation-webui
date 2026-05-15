@@ -535,6 +535,12 @@ let originalIndex; // To keep track of the original position
 let movedElement;
 
 function moveToChatTab() {
+  // On first call, wait until mode is initialized so the visibility check below sees the real state
+  if (!originalParent && !document.querySelector("#chat-mode input:checked")) {
+    requestAnimationFrame(moveToChatTab);
+    return;
+  }
+
   const characterMenu = document.getElementById("character-menu");
   const grandParent = characterMenu.parentElement.parentElement;
 

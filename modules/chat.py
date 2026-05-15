@@ -2765,11 +2765,22 @@ def handle_mode_change(state):
     else:
         past_chats_update = gr.update(choices=histories)
 
+    show_separator, show_reasoning, show_thinking, show_preserve_thinking = utils.get_jinja_control_visibility(state.get('instruction_template_str', ''))
+    not_chat = state['mode'] != 'chat'
+
     return [
         history,
         html,
         gr.update(visible=state['mode'] != 'instruct'),
         gr.update(visible=state['mode'] == 'chat-instruct'),
+        gr.update(visible=not_chat),
+        gr.update(visible=show_reasoning and not_chat),
+        gr.update(visible=show_thinking and not_chat),
+        gr.update(visible=show_preserve_thinking and not_chat),
+        gr.update(visible=show_separator and not_chat),
+        gr.update(visible=not_chat),
+        gr.update(visible=not_chat),
+        gr.update(visible=not_chat),
         past_chats_update
     ]
 
