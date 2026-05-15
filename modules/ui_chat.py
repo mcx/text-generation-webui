@@ -73,8 +73,8 @@ def create_ui():
             shared.gradio['Continue'] = gr.Button('Continue (Alt + Enter)', elem_id='Continue')
             shared.gradio['Remove last'] = gr.Button('Remove last reply (Ctrl + Shift + Backspace)', elem_id='Remove-last')
             shared.gradio['Impersonate'] = gr.Button('Impersonate (Ctrl + Shift + M)', elem_id='Impersonate')
-            shared.gradio['Send dummy message'] = gr.Button('Send dummy message')
-            shared.gradio['Send dummy reply'] = gr.Button('Send dummy reply')
+            shared.gradio['Insert user message'] = gr.Button('Insert user message')
+            shared.gradio['Insert assistant message'] = gr.Button('Insert assistant message')
             shared.gradio['send-chat-to-notebook'] = gr.Button('Send to Notebook')
             shared.gradio['show_controls'] = gr.Checkbox(value=shared.settings['show_controls'], label='Show controls (Ctrl+S)', elem_id='show-controls')
 
@@ -280,11 +280,11 @@ def create_event_handlers():
         None, None, None, js='() => document.getElementById("chat").parentNode.parentNode.parentNode.classList.remove("_generating")').then(
         None, None, None, js=f'() => {{{ui.audio_notification_js}}}')
 
-    shared.gradio['Send dummy message'].click(
+    shared.gradio['Insert user message'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.handle_send_dummy_message_click, gradio('textbox', 'interface_state'), gradio('history', 'display', 'textbox'), show_progress=False)
 
-    shared.gradio['Send dummy reply'].click(
+    shared.gradio['Insert assistant message'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.handle_send_dummy_reply_click, gradio('textbox', 'interface_state'), gradio('history', 'display', 'textbox'), show_progress=False)
 
