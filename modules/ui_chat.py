@@ -243,6 +243,9 @@ def create_event_handlers():
     # Morph HTML updates instead of updating everything
     shared.gradio['display'].change(None, gradio('display'), None, js="(data) => handleMorphdomUpdate(data)")
 
+    shared.gradio['display'].change(
+        chat.update_token_display_from_state, gradio('interface_state'), gradio('token_display'), show_progress=False)
+
     shared.gradio['Generate'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.check_model_loaded_or_raise, None, None, show_progress=False).success(

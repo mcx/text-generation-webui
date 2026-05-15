@@ -745,6 +745,26 @@ def count_prompt_tokens(text_input, state):
         return f"Error: {str(e)}"
 
 
+def update_token_display_from_state(state):
+    import gradio as gr
+    if shared.model is None:
+        return gr.update()
+
+    prompt_n = getattr(shared.model, 'last_prompt_token_count', None)
+    if not prompt_n:
+        return gr.update()
+
+    gen_n = getattr(shared.model, 'last_completion_token_count', 0) or 0
+    total = prompt_n + gen_n
+    max_tokens = state.get('truncation_length') or 0
+    percentage = (total / max_tokens) * 100 if max_tokens > 0 else 0
+    new_value = f"{total:,} / {max_tokens:,} tokens ({percentage:.1f}%)"
+    if new_value == getattr(shared.model, '_last_token_display', None):
+        return gr.update()
+    shared.model._last_token_display = new_value
+    return new_value
+
+
 def get_stopping_strings(state):
     renderers = []
 
