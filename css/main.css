@@ -873,7 +873,12 @@ audio {
     padding-right: 12px;
     gap: 10px;
     font-weight: 500;
+    font-size: 14px;
     color: var(--button-secondary-text-color);
+}
+
+#show-controls label span {
+    color: inherit;
 }
 
 #show-controls label input {
