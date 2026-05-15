@@ -203,6 +203,34 @@ def get_available_ggufs():
     return sorted(model_list, key=natural_keys)
 
 
+def is_mmproj_file(name):
+    lower = name.lower()
+    return lower.startswith('mmproj') and lower.endswith(('.gguf', '.bin'))
+
+
+def find_sibling_mmproj(model_path):
+    """Return an mmproj path relative to model_dir when exactly one mmproj file
+    sits next to the model in a subfolder of model_dir (any depth, not root).
+    """
+    try:
+        model_path = Path(model_path)
+        model_root = Path(shared.args.model_dir).resolve()
+        parent = model_path.parent.resolve()
+        if parent == model_root or model_root not in parent.parents:
+            return None
+
+        mmproj_candidates = [
+            entry for entry in parent.iterdir()
+            if entry.is_file() and is_mmproj_file(entry.name)
+        ]
+    except OSError:
+        return None
+
+    if len(mmproj_candidates) == 1:
+        return str(mmproj_candidates[0].relative_to(model_root))
+    return None
+
+
 def get_available_mmproj():
     mmproj_files = []
 
@@ -216,8 +244,7 @@ def get_available_mmproj():
     if model_dir.exists():
         for dirpath, _, files in os.walk(model_dir, followlinks=True):
             for file in files:
-                lower = file.lower()
-                if lower.startswith('mmproj') and lower.endswith(('.gguf', '.bin')):
+                if is_mmproj_file(file):
                     rel_path = str((Path(dirpath) / file).relative_to(model_dir))
                     mmproj_files.append(rel_path)
 
