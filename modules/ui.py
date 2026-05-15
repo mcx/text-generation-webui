@@ -76,7 +76,7 @@ if not shared.args.old_colors:
         body_text_color='#1a1a1a',
         button_secondary_background_fill="white",
         button_secondary_border_color="var(--border-color-primary)",
-        block_title_text_color='*body_text_color',
+        block_title_text_color='*button_secondary_text_color',
         button_primary_background_fill='var(--accent, #4a72ff)',
         button_primary_background_fill_hover='#3556cc',
         button_primary_border_color='var(--accent, #4a72ff)',
