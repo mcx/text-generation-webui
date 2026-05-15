@@ -343,12 +343,14 @@ function applyMorphdomUpdate(data) {
   const messagesContainer = document.getElementsByClassName("messages")[0];
   const messagesCountBefore = messagesContainer ? messagesContainer.children.length : 0;
 
-  // Track open blocks and store their scroll positions
+  // Track open/closed blocks and store scroll positions for open ones
   const openBlocks = new Set();
+  const closedBlocks = new Set();
   const scrollPositions = {};
   queryScope.querySelectorAll(".thinking-block").forEach(block => {
     const blockId = block.getAttribute("data-block-id");
-    if (blockId && block.hasAttribute("open") && !block.querySelector(".tool-approval-buttons")) {
+    if (!blockId || block.querySelector(".tool-approval-buttons")) return;
+    if (block.hasAttribute("open")) {
       openBlocks.add(blockId);
       const content = block.querySelector(".thinking-content");
       if (content) {
@@ -358,6 +360,8 @@ function applyMorphdomUpdate(data) {
           isAtBottom: isAtBottom
         };
       }
+    } else {
+      closedBlocks.add(blockId);
     }
   });
 
@@ -378,13 +382,16 @@ function applyMorphdomUpdate(data) {
           }
         }
 
-        // For thinking blocks, preserve user-opened state and
-        // server-requested open (e.g. tool approval); otherwise close.
+        // For thinking blocks that already exist in the DOM, preserve the
+        // user's toggle state across streaming updates (in either direction).
+        // New blocks fall through to the server-rendered open/closed state.
         if (fromEl.classList && fromEl.classList.contains("thinking-block") &&
            toEl.classList && toEl.classList.contains("thinking-block")) {
           const blockId = toEl.getAttribute("data-block-id");
           if (blockId && openBlocks.has(blockId)) {
             toEl.setAttribute("open", "");
+          } else if (blockId && closedBlocks.has(blockId)) {
+            toEl.removeAttribute("open");
           }
         }
 
