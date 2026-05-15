@@ -889,11 +889,6 @@ audio {
     opacity: 0.333;
 }
 
-/* Match checkbox label color to block title color (Gradio hardcodes body_text_color in Checkbox.svelte) */
-label:has(> input[type="checkbox"]) {
-    color: var(--button-secondary-text-color);
-}
-
 #chat-tab #chat-buttons {
     display: none !important;
 }
