@@ -557,7 +557,8 @@ function moveToChatTab() {
     grandParent.style.display = "none";
   }
 
-  grandParent.children[0].style.minWidth = "100%";
+  grandParent.children[0].style.flex = "1";
+  grandParent.children[0].style.minWidth = "0";
 
   const chatControlsFirstChild = document.querySelector("#chat-controls").firstElementChild;
   const newParent = chatControlsFirstChild;
@@ -566,6 +567,9 @@ function moveToChatTab() {
   newParent.insertBefore(grandParent, newParent.children[newPosition]);
   document.getElementById("save-character").style.display = "none";
   document.getElementById("restore-character").style.display = "none";
+
+  const characterInfo = document.querySelector("#character-menu [data-testid='block-info']")?.nextElementSibling;
+  if (characterInfo) characterInfo.style.display = "none";
 }
 
 function restoreOriginalPosition() {
@@ -579,7 +583,11 @@ function restoreOriginalPosition() {
     document.getElementById("save-character").style.display = "";
     document.getElementById("restore-character").style.display = "";
     movedElement.style.display = "";
+    movedElement.children[0].style.flex = "";
     movedElement.children[0].style.minWidth = "";
+
+    const characterInfo = document.querySelector("#character-menu [data-testid='block-info']")?.nextElementSibling;
+    if (characterInfo) characterInfo.style.display = "";
   }
 }
 
