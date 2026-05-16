@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, screen } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, screen, shell } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -126,6 +126,10 @@ function createWindow(port) {
     if (params.editFlags.canPaste) tmpl.push({ role: "paste" });
     if (params.editFlags.canSelectAll) tmpl.push({ type: "separator" }, { role: "selectAll" });
     if (tmpl.length) Menu.buildFromTemplate(tmpl).popup({ window: mainWindow });
+  });
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: "deny" };
   });
   mainWindow.on("page-title-updated", (e) => e.preventDefault());
   mainWindow.webContents.on("will-prevent-unload", (e) => e.preventDefault());
