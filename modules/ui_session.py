@@ -61,24 +61,26 @@ def create_ui():
         with gr.Row():
             with gr.Column():
                 gr.Markdown("## Settings")
-                shared.gradio['toggle_dark_mode'] = gr.Button('Toggle light/dark theme 💡', elem_classes='refresh-button')
                 if shared.is_electron:
                     with gr.Row():
                         shared.gradio['model_dir'] = gr.Textbox(label='Models directory', value=shared.settings['model_dir'], scale=4, elem_classes='slim-textbox')
                         shared.gradio['model_dir_browse'] = gr.Button('Browse', elem_classes=['refresh-button', 'refresh-button-medium'])
+
+                shared.gradio['toggle_dark_mode'] = gr.Button('Toggle light/dark theme 💡', elem_classes=['refresh-button', 'settings-button'])
                 shared.gradio['show_two_notebook_columns'] = gr.Checkbox(label='Show two columns in the Notebook tab', value=shared.settings['show_two_notebook_columns'])
                 shared.gradio['paste_to_attachment'] = gr.Checkbox(label='Turn long pasted text into attachments in the Chat tab', value=shared.settings['paste_to_attachment'], elem_id='paste_to_attachment')
                 shared.gradio['include_past_attachments'] = gr.Checkbox(label='Include attachments/search results from previous messages in the chat prompt', value=shared.settings['include_past_attachments'])
 
                 if portable_version:
                     gr.Markdown("## Updates")
-                    shared.gradio['check_updates'] = gr.Button('Check for updates 🔄', elem_classes='refresh-button')
+                    shared.gradio['check_updates'] = gr.Button('Check for updates 🔄', elem_classes=['refresh-button', 'settings-button'])
                     shared.gradio['update_status'] = gr.HTML(value='', elem_id='update-status')
 
             with gr.Column():
                 gr.Markdown("## Extensions & flags")
-                shared.gradio['save_settings'] = gr.Button(f'Save extensions settings to {shared.user_data_dir}/settings.yaml', interactive=not mu)
-                shared.gradio['reset_interface'] = gr.Button("Apply flags/extensions and restart", interactive=not mu)
+                with gr.Row():
+                    shared.gradio['save_settings'] = gr.Button(f'Save extensions settings to {shared.user_data_dir}/settings.yaml', elem_classes=['refresh-button', 'settings-button'], interactive=not mu)
+                    shared.gradio['reset_interface'] = gr.Button("Apply flags/extensions and restart", elem_classes=['refresh-button', 'settings-button'], interactive=not mu)
                 with gr.Row():
                     with gr.Column():
                         shared.gradio['extensions_menu'] = gr.CheckboxGroup(choices=utils.get_available_extensions(), value=shared.args.extensions, label="Available extensions", info='Note that some of these extensions may require manually installing Python requirements through the command: pip install -r extensions/extension_name/requirements.txt', elem_classes='checkboxgroup-table')

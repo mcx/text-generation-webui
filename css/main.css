@@ -130,6 +130,13 @@ div.svelte-iyf88w {
     max-width: 2.2em;
 }
 
+.settings-button {
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    align-self: flex-start;
+}
+
 .button_nowrap {
     white-space: nowrap;
 }
