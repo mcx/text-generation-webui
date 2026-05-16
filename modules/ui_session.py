@@ -70,6 +70,8 @@ def create_ui():
                 shared.gradio['show_two_notebook_columns'] = gr.Checkbox(label='Show two columns in the Notebook tab', value=shared.settings['show_two_notebook_columns'])
                 shared.gradio['paste_to_attachment'] = gr.Checkbox(label='Turn long pasted text into attachments in the Chat tab', value=shared.settings['paste_to_attachment'], elem_id='paste_to_attachment')
                 shared.gradio['include_past_attachments'] = gr.Checkbox(label='Include attachments/search results from previous messages in the chat prompt', value=shared.settings['include_past_attachments'])
+                if shared.is_electron:
+                    shared.gradio['spellcheck'] = gr.Checkbox(label='Enable spellcheck in text inputs', value=shared.settings['spellcheck'], elem_id='spellcheck')
 
                 if portable_version:
                     gr.Markdown("## Updates")
