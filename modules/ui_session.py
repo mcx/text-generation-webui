@@ -162,8 +162,8 @@ def handle_default_to_notebook_change(show_two_columns, default_input, default_o
 
 
 def apply_model_dir(value):
-    shared.args.model_dir = value
     if Path(value).is_dir():
+        shared.args.model_dir = value
         shared.user_config = shared.load_user_config()
 
 
