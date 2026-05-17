@@ -342,6 +342,8 @@ function applyMorphdomUpdate(data) {
 
   const messagesContainer = document.getElementsByClassName("messages")[0];
   const messagesCountBefore = messagesContainer ? messagesContainer.children.length : 0;
+  // Survive morphdom: server HTML has no inline style.
+  const savedPaddingBottom = messagesContainer ? messagesContainer.style.paddingBottom : "";
 
   // Track open/closed blocks and store scroll positions for open ones
   const openBlocks = new Set();
@@ -417,6 +419,10 @@ function applyMorphdomUpdate(data) {
       }
     }
   );
+
+  if (messagesContainer && savedPaddingBottom) {
+    messagesContainer.style.paddingBottom = savedPaddingBottom;
+  }
 
   // Syntax highlighting and LaTeX
   if (window.doSyntaxHighlighting) {

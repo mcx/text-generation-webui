@@ -493,6 +493,7 @@ audio {
 .user-message,
 .assistant-message {
     contain: layout paint;
+    animation: fadeIn 0.2s ease-out;
 }
 
 .chat .message .timestamp {
