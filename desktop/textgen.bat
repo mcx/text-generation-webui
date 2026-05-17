@@ -1,4 +1,5 @@
 @echo off
+set PYTHONUTF8=1
 set "APP=%~dp0__APP__"
 for %%a in (%*) do (
     if /i "%%~a"=="--help" goto :help

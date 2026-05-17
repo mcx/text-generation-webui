@@ -535,6 +535,12 @@ let originalIndex; // To keep track of the original position
 let movedElement;
 
 function moveToChatTab() {
+  // On first call, wait until mode is initialized so the visibility check below sees the real state
+  if (!originalParent && !document.querySelector("#chat-mode input:checked")) {
+    requestAnimationFrame(moveToChatTab);
+    return;
+  }
+
   const characterMenu = document.getElementById("character-menu");
   const grandParent = characterMenu.parentElement.parentElement;
 
@@ -551,15 +557,19 @@ function moveToChatTab() {
     grandParent.style.display = "none";
   }
 
-  grandParent.children[0].style.minWidth = "100%";
+  grandParent.children[0].style.flex = "1";
+  grandParent.children[0].style.minWidth = "0";
 
   const chatControlsFirstChild = document.querySelector("#chat-controls").firstElementChild;
   const newParent = chatControlsFirstChild;
-  let newPosition = newParent.children.length - 3;
+  let newPosition = 1;
 
   newParent.insertBefore(grandParent, newParent.children[newPosition]);
   document.getElementById("save-character").style.display = "none";
   document.getElementById("restore-character").style.display = "none";
+
+  const characterInfo = document.querySelector("#character-menu [data-testid='block-info']")?.nextElementSibling;
+  if (characterInfo) characterInfo.style.display = "none";
 }
 
 function restoreOriginalPosition() {
@@ -573,7 +583,11 @@ function restoreOriginalPosition() {
     document.getElementById("save-character").style.display = "";
     document.getElementById("restore-character").style.display = "";
     movedElement.style.display = "";
+    movedElement.children[0].style.flex = "";
     movedElement.children[0].style.minWidth = "";
+
+    const characterInfo = document.querySelector("#character-menu [data-testid='block-info']")?.nextElementSibling;
+    if (characterInfo) characterInfo.style.display = "";
   }
 }
 
@@ -865,6 +879,29 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", setupPasteHandler);
 } else {
   setupPasteHandler();
+}
+
+//------------------------------------------------
+// Spellcheck toggle (Electron only; checkbox is hidden in the browser)
+//------------------------------------------------
+
+function setupSpellcheckToggle() {
+  if (!window.electronAPI) return;
+  const checkbox = document.querySelector("#spellcheck input[data-testid=\"checkbox\"]");
+  if (!checkbox) {
+    setTimeout(setupSpellcheckToggle, 500);
+    return;
+  }
+
+  const apply = () => { document.body.spellcheck = checkbox.checked; };
+  apply();
+  checkbox.addEventListener("change", apply);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", setupSpellcheckToggle);
+} else {
+  setupSpellcheckToggle();
 }
 
 //------------------------------------------------

@@ -93,44 +93,25 @@ def perform_web_search(query, num_pages=3, max_workers=5, fetch_content=True):
         kwargs = {'max_results': num_pages} if num_pages is not None else {}
         results = DDGS().text(query, **kwargs)
 
-        download_tasks = [(r['href'], r['title'], i) for i, r in enumerate(results)]
-
-        search_results = [None] * len(download_tasks)  # Pre-allocate to maintain order
+        search_results = [
+            {'title': r['title'], 'url': r['href'], 'snippet': r.get('body', ''), 'content': ''}
+            for r in results
+        ]
 
         if not fetch_content:
-            for url, title, index in download_tasks:
-                search_results[index] = {
-                    'title': title,
-                    'url': url,
-                    'content': ''
-                }
-
             return search_results
 
-        # Download pages in parallel
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # Submit all download tasks
-            future_to_task = {
-                executor.submit(download_web_page, task[0]): task
-                for task in download_tasks
+            future_to_index = {
+                executor.submit(download_web_page, r['url']): i
+                for i, r in enumerate(search_results)
             }
-
-            # Collect results as they complete
-            for future in as_completed(future_to_task):
-                url, title, index = future_to_task[future]
+            for future in as_completed(future_to_index):
+                i = future_to_index[future]
                 try:
-                    content = future.result()
-                    search_results[index] = {
-                        'title': title,
-                        'url': url,
-                        'content': content
-                    }
-                except Exception:
-                    search_results[index] = {
-                        'title': title,
-                        'url': url,
-                        'content': ''
-                    }
+                    search_results[i]['content'] = future.result()
+                except Exception as e:
+                    logger.error(f"Error fetching {search_results[i]['url']}: {e}")
 
         return search_results
 

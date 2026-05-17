@@ -221,6 +221,10 @@ class LlamaServer:
             pprint.PrettyPrinter(indent=4, sort_dicts=False).pprint(printable_payload)
             print()
 
+        full_text = ""
+        self.last_completion_probabilities = []
+        self.last_completion_token_count = 0
+
         # Make the generation request
         response = self.session.post(url, json=payload, stream=True)
         try:
@@ -229,9 +233,6 @@ class LlamaServer:
                 return
             else:
                 response.raise_for_status()  # Raise an exception for HTTP errors
-
-            full_text = ""
-            self.last_completion_probabilities = []
 
             # Process the streaming response
             stop_event = state.get('stop_event')
@@ -255,14 +256,16 @@ class LlamaServer:
                     # Extract the token content
                     if data.get('content', ''):
                         full_text += data['content']
+                        self.last_completion_token_count += 1
                         yield full_text
 
                     # Capture logprobs if present
                     if 'completion_probabilities' in data:
                         self.last_completion_probabilities.extend(data['completion_probabilities'])
 
-                    # Check if generation is complete
                     if data.get('stop', False):
+                        # Server count includes speculative-decode tokens our per-chunk counter misses.
+                        self.last_completion_token_count = data.get('tokens_predicted', self.last_completion_token_count)
                         break
 
                 except json.JSONDecodeError as e:
@@ -433,6 +436,9 @@ class LlamaServer:
             "--flash-attn", "on",
         ]
 
+        if shared.args.ctx_size < 0:
+            shared.args.ctx_size = 0
+
         if shared.args.ctx_size > 0:
             cmd += ["--ctx-size", str(shared.args.ctx_size)]
         elif shared.args.gpu_layers >= 0:
@@ -471,7 +477,11 @@ class LlamaServer:
         if shared.args.mmproj not in [None, 'None']:
             path = Path(shared.args.mmproj)
             if not path.exists():
-                path = shared.user_data_dir / 'mmproj' / shared.args.mmproj
+                alt = shared.user_data_dir / 'mmproj' / shared.args.mmproj
+                if alt.exists():
+                    path = alt
+                else:
+                    path = Path(shared.args.model_dir) / shared.args.mmproj
 
             if path.exists():
                 cmd += ["--mmproj", str(path)]

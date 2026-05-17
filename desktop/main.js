@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen } = require("electron");
+const { app, BrowserWindow, Menu, dialog, ipcMain, screen, shell } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -111,9 +111,36 @@ function createWindow(port) {
     ...bounds,
     title: TITLE,
     autoHideMenuBar: true,
-    webPreferences: { nodeIntegration: false, contextIsolation: true, spellcheck: false },
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      spellcheck: true,
+    },
   });
   if (state && state.maximized) mainWindow.maximize();
+  mainWindow.webContents.on("context-menu", (_, params) => {
+    const tmpl = [];
+    if (params.misspelledWord) {
+      for (const s of params.dictionarySuggestions) {
+        tmpl.push({ label: s, click: () => mainWindow.webContents.replaceMisspelling(s) });
+      }
+      if (params.dictionarySuggestions.length) tmpl.push({ type: "separator" });
+      tmpl.push(
+        { label: "Add to dictionary", click: () => mainWindow.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord) },
+        { type: "separator" },
+      );
+    }
+    if (params.editFlags.canCut) tmpl.push({ role: "cut" });
+    if (params.editFlags.canCopy) tmpl.push({ role: "copy" });
+    if (params.editFlags.canPaste) tmpl.push({ role: "paste" });
+    if (params.editFlags.canSelectAll) tmpl.push({ type: "separator" }, { role: "selectAll" });
+    if (tmpl.length) Menu.buildFromTemplate(tmpl).popup({ window: mainWindow });
+  });
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
   mainWindow.on("page-title-updated", (e) => e.preventDefault());
   mainWindow.webContents.on("will-prevent-unload", (e) => e.preventDefault());
   mainWindow.on("close", saveState);
@@ -139,6 +166,11 @@ async function waitForPortAndOpen(port) {
   }, 500);
 }
 
+ipcMain.handle("pick-directory", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, { properties: ["openDirectory"] });
+  return result.canceled ? null : result.filePaths[0];
+});
+
 app.whenReady().then(() => {
   serverProcess = spawn(python, ["server.py", "--portable", "--api", ...userArgs], {
     cwd: baseDir,
@@ -151,6 +183,7 @@ app.whenReady().then(() => {
       PYTHONUNBUFFERED: "1",
       FORCE_COLOR: "1",
       TERM: "xterm-256color",
+      TEXTGEN_ELECTRON: "1",
     },
   });
   if (!isWin) serverProcess.unref();

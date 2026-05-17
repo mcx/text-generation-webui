@@ -40,6 +40,7 @@ processing_message = ''
 gradio = {}
 persistent_interface_state = {}
 need_restart = False
+is_electron = os.environ.get('TEXTGEN_ELECTRON') == '1'
 
 # Parser copied from https://github.com/vladmandic/automatic
 parser = argparse.ArgumentParser(description="TextGen", conflict_handler='resolve', add_help=True, formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=55, indent_increment=2, width=200))
@@ -291,6 +292,7 @@ settings = {
     'show_two_notebook_columns': False,
     'paste_to_attachment': False,
     'include_past_attachments': True,
+    'spellcheck': False,
 
     # Generation parameters - Curve shape
     'temperature': neutral_samplers['temperature'],

@@ -73,34 +73,37 @@ def create_ui():
             shared.gradio['Continue'] = gr.Button('Continue (Alt + Enter)', elem_id='Continue')
             shared.gradio['Remove last'] = gr.Button('Remove last reply (Ctrl + Shift + Backspace)', elem_id='Remove-last')
             shared.gradio['Impersonate'] = gr.Button('Impersonate (Ctrl + Shift + M)', elem_id='Impersonate')
-            shared.gradio['Send dummy message'] = gr.Button('Send dummy message')
-            shared.gradio['Send dummy reply'] = gr.Button('Send dummy reply')
+            shared.gradio['Insert user message'] = gr.Button('Insert user message')
+            shared.gradio['Insert assistant message'] = gr.Button('Insert assistant message')
             shared.gradio['send-chat-to-notebook'] = gr.Button('Send to Notebook')
             shared.gradio['show_controls'] = gr.Checkbox(value=shared.settings['show_controls'], label='Show controls (Ctrl+S)', elem_id='show-controls')
 
         with gr.Row(elem_id='chat-controls', elem_classes=['pretty_scrollbar']):
             with gr.Column():
                 with gr.Row():
-                    shared.gradio['start_with'] = gr.Textbox(label='Start reply with', placeholder='Sure thing!', value=shared.settings['start_with'], elem_classes=['add_scrollbar'])
+                    shared.gradio['mode'] = gr.Radio(choices=['instruct', 'chat-instruct', 'chat'], value=None, label='Mode', info='In instruct and chat-instruct modes, the template under Parameters > Instruction template is used.', elem_id='chat-mode')
+
+                with gr.Row():
+                    shared.gradio['chat_style'] = gr.Dropdown(choices=utils.get_available_chat_styles(), label='Chat style', value=shared.settings['chat_style'], visible=shared.settings['mode'] != 'instruct')
+
+                with gr.Row():
+                    shared.gradio['chat-instruct_command'] = gr.Textbox(value=shared.settings['chat-instruct_command'], lines=12, label='Command for chat-instruct mode', info='<|character|> and <|prompt|> get replaced with the bot name and the regular chat prompt respectively.', visible=shared.settings['mode'] == 'chat-instruct', elem_classes=['add_scrollbar'])
+
+                # Reasoning, tools, and MCP rely on the instruction template; chat mode uses the chat template instead, so they're hidden there.
+                not_chat = shared.settings['mode'] != 'chat'
+
+                shared.gradio['tools_separator'] = gr.HTML("<div class='sidebar-vertical-separator'></div>", visible=not_chat)
 
                 show_separator, show_reasoning, show_thinking, show_preserve_thinking = utils.get_jinja_control_visibility(shared.settings.get('instruction_template_str', ''))
 
-                shared.gradio['jinja_controls_separator'] = gr.HTML("<div class='sidebar-vertical-separator'></div>", visible=show_separator)
+                shared.gradio['reasoning_effort'] = gr.Dropdown(value=shared.settings['reasoning_effort'], choices=['low', 'medium', 'high'], label='Reasoning effort', visible=show_reasoning and not_chat)
+                shared.gradio['enable_thinking'] = gr.Checkbox(value=shared.settings['enable_thinking'], label='Enable thinking', visible=show_thinking and not_chat)
+                shared.gradio['preserve_thinking'] = gr.Checkbox(value=shared.settings['preserve_thinking'], label='Preserve thinking', visible=show_preserve_thinking and not_chat)
 
-                shared.gradio['reasoning_effort'] = gr.Dropdown(value=shared.settings['reasoning_effort'], choices=['low', 'medium', 'high'], label='Reasoning effort', visible=show_reasoning)
-                shared.gradio['enable_thinking'] = gr.Checkbox(value=shared.settings['enable_thinking'], label='Enable thinking', visible=show_thinking)
-                shared.gradio['preserve_thinking'] = gr.Checkbox(value=shared.settings['preserve_thinking'], label='Preserve thinking', visible=show_preserve_thinking)
-
-                gr.HTML("<div class='sidebar-vertical-separator'></div>")
-
-                shared.gradio['enable_web_search'] = gr.Checkbox(value=shared.settings.get('enable_web_search', False), label='Activate web search', elem_id='web-search')
-                with gr.Row(visible=shared.settings.get('enable_web_search', False)) as shared.gradio['web_search_row']:
-                    shared.gradio['web_search_pages'] = gr.Number(value=shared.settings.get('web_search_pages', 3), precision=0, label='Number of pages to download', minimum=1, maximum=10)
-
-                gr.HTML("<div class='sidebar-vertical-separator'></div>")
+                shared.gradio['jinja_controls_separator'] = gr.HTML("<div class='sidebar-vertical-separator'></div>", visible=show_separator and not_chat)
 
                 from modules.tool_use import get_available_tools
-                shared.gradio['selected_tools'] = gr.CheckboxGroup(choices=get_available_tools(), value=shared.settings.get('selected_tools', []), label='Tools', info='Functions the model can call during generation.', elem_id='tools-group')
+                shared.gradio['selected_tools'] = gr.CheckboxGroup(choices=get_available_tools(), value=shared.settings.get('selected_tools', []), label='Tools', info='Functions the model can call during generation.', elem_id='tools-group', visible=not_chat)
                 shared.gradio['tools_refresh'] = gr.Button('Refresh list', elem_id='tools-refresh-btn', visible=False)
                 shared.gradio['tools_refresh'].click(fn=lambda: gr.update(choices=get_available_tools()), inputs=[], outputs=[shared.gradio['selected_tools']])
 
@@ -112,21 +115,21 @@ def create_ui():
 
                 shared.gradio['selected_tools'].change(fn=sync_web_tools, inputs=[shared.gradio['selected_tools']], outputs=[shared.gradio['selected_tools']], show_progress=False)
 
-                with gr.Accordion('MCP servers', open=False):
+                with gr.Accordion('MCP servers', open=False, visible=not_chat) as shared.gradio['mcp_servers_accordion']:
                     shared.gradio['mcp_servers'] = gr.Textbox(value=shared.settings.get('mcp_servers', ''), lines=3, max_lines=3, label='', info='One URL per line for HTTP servers. For headers: url,Header: value. For stdio servers, use user_data/mcp.json.', elem_classes=['add_scrollbar'])
 
-                shared.gradio['confirm_tool_calls'] = gr.Checkbox(value=shared.settings.get('confirm_tool_calls', False), label='Confirm tool calls', info='Ask for approval before executing each tool call.')
+                shared.gradio['confirm_tool_calls'] = gr.Checkbox(value=shared.settings.get('confirm_tool_calls', False), label='Confirm tool calls', info='Ask for approval before executing each tool call.', visible=not_chat)
+
+                gr.HTML("<div class='sidebar-vertical-separator'></div>")
+
+                shared.gradio['enable_web_search'] = gr.Checkbox(value=shared.settings.get('enable_web_search', False), label='Activate web search', elem_id='web-search')
+                with gr.Row(visible=shared.settings.get('enable_web_search', False)) as shared.gradio['web_search_row']:
+                    shared.gradio['web_search_pages'] = gr.Number(value=shared.settings.get('web_search_pages', 3), precision=0, label='Number of pages to download', minimum=1, maximum=10)
 
                 gr.HTML("<div class='sidebar-vertical-separator'></div>")
 
                 with gr.Row():
-                    shared.gradio['mode'] = gr.Radio(choices=['instruct', 'chat-instruct', 'chat'], value=None, label='Mode', info='In instruct and chat-instruct modes, the template under Parameters > Instruction template is used.', elem_id='chat-mode')
-
-                with gr.Row():
-                    shared.gradio['chat_style'] = gr.Dropdown(choices=utils.get_available_chat_styles(), label='Chat style', value=shared.settings['chat_style'], visible=shared.settings['mode'] != 'instruct')
-
-                with gr.Row():
-                    shared.gradio['chat-instruct_command'] = gr.Textbox(value=shared.settings['chat-instruct_command'], lines=12, label='Command for chat-instruct mode', info='<|character|> and <|prompt|> get replaced with the bot name and the regular chat prompt respectively.', visible=shared.settings['mode'] == 'chat-instruct', elem_classes=['add_scrollbar'])
+                    shared.gradio['start_with'] = gr.Textbox(label='Start reply with', placeholder='Sure thing!', value=shared.settings['start_with'], elem_classes=['add_scrollbar'])
 
                 gr.HTML("<div class='sidebar-vertical-separator'></div>")
 
@@ -240,6 +243,9 @@ def create_event_handlers():
     # Morph HTML updates instead of updating everything
     shared.gradio['display'].change(None, gradio('display'), None, js="(data) => handleMorphdomUpdate(data)")
 
+    shared.gradio['display'].change(
+        chat.update_token_display_from_state, gradio('interface_state'), gradio('token_display'), show_progress=False)
+
     shared.gradio['Generate'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.check_model_loaded_or_raise, None, None, show_progress=False).success(
@@ -280,11 +286,11 @@ def create_event_handlers():
         None, None, None, js='() => document.getElementById("chat").parentNode.parentNode.parentNode.classList.remove("_generating")').then(
         None, None, None, js=f'() => {{{ui.audio_notification_js}}}')
 
-    shared.gradio['Send dummy message'].click(
+    shared.gradio['Insert user message'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.handle_send_dummy_message_click, gradio('textbox', 'interface_state'), gradio('history', 'display', 'textbox'), show_progress=False)
 
-    shared.gradio['Send dummy reply'].click(
+    shared.gradio['Insert assistant message'].click(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
         chat.handle_send_dummy_reply_click, gradio('textbox', 'interface_state'), gradio('history', 'display', 'textbox'), show_progress=False)
 
@@ -352,7 +358,7 @@ def create_event_handlers():
 
     shared.gradio['mode'].change(
         ui.gather_interface_values, gradio(shared.input_elements), gradio('interface_state')).then(
-        chat.handle_mode_change, gradio('interface_state'), gradio('history', 'display', 'chat_style', 'chat-instruct_command', 'unique_id'), show_progress=False).then(
+        chat.handle_mode_change, gradio('interface_state'), gradio('history', 'display', 'chat_style', 'chat-instruct_command', 'tools_separator', 'reasoning_effort', 'enable_thinking', 'preserve_thinking', 'jinja_controls_separator', 'selected_tools', 'mcp_servers_accordion', 'confirm_tool_calls', 'unique_id'), show_progress=False).then(
         None, gradio('mode'), None, js="(mode) => {const characterContainer = document.getElementById('character-menu').parentNode.parentNode; const isInChatTab = document.querySelector('#chat-controls').contains(characterContainer); if (isInChatTab) { characterContainer.style.display = mode === 'instruct' ? 'none' : ''; } if (mode === 'instruct') document.querySelectorAll('.bigProfilePicture').forEach(el => el.remove());}")
 
     shared.gradio['chat_style'].change(chat.redraw_html, gradio(reload_arr), gradio('display'), show_progress=False)
